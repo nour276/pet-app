@@ -39,15 +39,6 @@ const conversationsData = [
     unread: 1,
     online: true,
   },
-  {
-    id: '4',
-    owner: 'Amine Jlassi',
-    pet: 'Milo',
-    lastMessage: 'When should I come for the follow-up visit?',
-    time: '12:30',
-    unread: 0,
-    online: false,
-  },
 ];
 
 export default function ChatScreen() {

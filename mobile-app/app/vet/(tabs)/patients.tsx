@@ -42,16 +42,6 @@ const patientsData = [
     history: 'Vaccination record updated, healthy condition',
     status: 'Follow-up',
   },
-  {
-    id: '4',
-    name: 'Milo',
-    type: 'Cat',
-    age: '1 year',
-    breed: 'British Shorthair',
-    owner: 'Amine Jlassi',
-    history: 'Skin examination and diagnosis update',
-    status: 'Stable',
-  },
 ];
 
 export default function PatientsScreen() {

@@ -62,7 +62,7 @@ export default function OnboardingScreen() {
           <View style={styles.actionsRow}>
             <TouchableOpacity
               style={styles.nextButton}
-              onPress={() => router.replace('/choose-role' as any)}
+              onPress={() => router.replace('/login' as any)}
             >
               <Text style={styles.nextButtonText}>Next</Text>
             </TouchableOpacity>

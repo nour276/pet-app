@@ -202,15 +202,6 @@ export default function VetDashboardScreen() {
               <Ionicons name="paw" size={18} color="#7DBE8A" />
               <Text style={styles.simpleText}>Luna — vaccination completed</Text>
             </TouchableOpacity>
-            <View style={styles.divider} />
-            <TouchableOpacity
-              style={styles.simpleRow}
-              activeOpacity={0.85}
-              onPress={() => router.push('/vet/(tabs)/patients')}
-            >
-              <Ionicons name="paw" size={18} color="#7DBE8A" />
-              <Text style={styles.simpleText}>Milo — diagnosis updated</Text>
-            </TouchableOpacity>
           </View>
 
           <Text style={styles.sectionTitle}>Notifications</Text>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 function TabIcon({ name, color, focused }: { name: any; color: string; focused: boolean }) {
   return (
@@ -11,12 +11,12 @@ function TabIcon({ name, color, focused }: { name: any; color: string; focused: 
   );
 }
 
-export default function TabsLayout() {
+export default function VetTabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#5B8DEF',
+        tabBarActiveTintColor: '#7DBE8A',
         tabBarInactiveTintColor: '#9AAABB',
         tabBarStyle: {
           height: 76,
@@ -41,41 +41,41 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Dashboard',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'home' : 'home-outline'} color={color} focused={focused} />
+            <TabIcon name={focused ? 'grid' : 'grid-outline'} color={color} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="map"
+        name="appointments"
         options={{
-          title: 'Map',
+          title: 'Appointments',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'location' : 'location-outline'} color={color} focused={focused} />
+            <TabIcon name={focused ? 'calendar' : 'calendar-outline'} color={color} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="history"
+        name="patients"
         options={{
-          title: 'Activity',
+          title: 'Patients',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'pulse' : 'pulse-outline'} color={color} focused={focused} />
+            <TabIcon name={focused ? 'paw' : 'paw-outline'} color={color} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="alerts"
+        name="chat"
         options={{
-          title: 'Alerts',
+          title: 'Messages',
           tabBarIcon: ({ color, focused }) => (
-            <TabIcon name={focused ? 'notifications' : 'notifications-outline'} color={color} focused={focused} />
+            <TabIcon name={focused ? 'chatbubbles' : 'chatbubbles-outline'} color={color} focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="vet-profile"
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, focused }) => (
@@ -83,6 +83,7 @@ export default function TabsLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="medical-records" options={{ href: null }} />
     </Tabs>
   );
 }
@@ -96,6 +97,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconWrapperActive: {
-    backgroundColor: 'rgba(91,141,239,0.12)',
+    backgroundColor: 'rgba(125,190,138,0.15)',
   },
 });

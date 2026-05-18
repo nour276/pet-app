@@ -35,14 +35,6 @@ const initialBookings = [
     reason: 'Vaccination visit',
     type: 'Confirmed',
   },
-  {
-    id: '4',
-    time: '16:30',
-    pet: 'Milo',
-    owner: 'Amine Jlassi',
-    reason: 'Skin examination',
-    type: 'Pending',
-  },
 ];
 
 export default function BookingsScreen() {

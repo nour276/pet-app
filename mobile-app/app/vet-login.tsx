@@ -10,9 +10,11 @@ import {
   Alert,
   ImageBackground,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function VetLoginScreen() {
   const router = useRouter();
@@ -21,13 +23,36 @@ export default function VetLoginScreen() {
   const [password, setPassword] = useState('');
   const [secureTextEntry, setSecureTextEntry] = useState(true);
 
-  const handleLogin = () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       Alert.alert('Missing information', 'Please enter your email and password.');
       return;
     }
 
-    router.push('/vet/(tabs)/dashboard');
+    setLoading(true);
+    try {
+      const secRaw = await AsyncStorage.getItem('secretaryCredentials');
+      if (secRaw) {
+        const secCred: { email: string; password: string } = JSON.parse(secRaw);
+        const emailMatch    = email.trim().toLowerCase() === secCred.email.toLowerCase();
+        const passwordMatch = password.trim() === secCred.password.trim();
+        if (emailMatch && passwordMatch) {
+          await AsyncStorage.setItem('secretaryMode', 'true');
+          setLoading(false);
+          router.replace('/secretary' as any);
+          return;
+        }
+        /* credentials exist but don't match — let vet login proceed silently */
+      }
+      /* no secretary configured OR wrong creds → treat as vet login */
+      setLoading(false);
+      router.replace('/(vet-tabs)');
+    } catch {
+      setLoading(false);
+      router.replace('/(vet-tabs)');
+    }
   };
 
   const handleBack = () => {
@@ -106,17 +131,35 @@ export default function VetLoginScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.forgotButton}>
+            <TouchableOpacity
+              style={styles.forgotButton}
+              onPress={() => Alert.alert('Reset Password', 'A password reset link will be sent to your email.')}
+            >
               <Text style={styles.forgotText}>Forgot password?</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-              <Text style={styles.loginButtonText}>Login</Text>
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={loading}>
+              {loading
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.loginButtonText}>Login</Text>}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.registerRow}>
-              <Text style={styles.registerText}>Don’t have a vet account? </Text>
+            <TouchableOpacity
+              style={styles.registerRow}
+              onPress={() => router.push('/register-vet' as any)}
+            >
+              <Text style={styles.registerText}>Don't have a vet account? </Text>
               <Text style={styles.registerLink}>Register</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.secretaryRow}
+              onPress={() => router.replace('/secretary/dashboard' as any)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="person-outline" size={14} color="#9B8DEF" />
+              <Text style={styles.secretaryText}>Secretary? Access your dashboard</Text>
+              <Ionicons name="chevron-forward" size={13} color="#9B8DEF" />
             </TouchableOpacity>
           </View>
 
@@ -265,5 +308,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 30,
     paddingHorizontal: 10,
+  },
+  secretaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    marginTop: 10,
+  },
+  secretaryText: {
+    fontSize: 13,
+    color: '#9B8DEF',
+    fontWeight: '600',
   },
 });

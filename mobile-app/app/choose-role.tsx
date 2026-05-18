@@ -16,11 +16,11 @@ export default function ChooseRoleScreen() {
   const router = useRouter();
 
   const handleOwnerPress = () => {
-    router.push('/login' as any);
+    router.push('/register-owner' as any);
   };
 
   const handleVetPress = () => {
-    router.push('/vet-login' as any);
+    router.push('/register-vet' as any);
   };
 
   return (

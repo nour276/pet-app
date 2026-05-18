@@ -1,0 +1,38 @@
+export const VETS = [
+  {
+    id: '1',
+    name: 'Dr. Amira Ben Ali',
+    phone: '+216 71 234 567',
+    address: '12 Rue de la Liberté, Tunis',
+    latitude: 36.8188,
+    longitude: 10.1658,
+    specialty: 'General Veterinarian',
+  },
+  {
+    id: '2',
+    name: 'Dr. Karim Trabelsi',
+    phone: '+216 73 456 789',
+    address: '45 Avenue Habib Bourguiba, Sfax',
+    latitude: 34.7398,
+    longitude: 10.7600,
+    specialty: 'Small Animals',
+  },
+  {
+    id: '3',
+    name: 'Dr. Salma Mansouri',
+    phone: '+216 72 345 678',
+    address: '8 Rue Ibn Khaldoun, Sousse',
+    latitude: 35.8288,
+    longitude: 10.6405,
+    specialty: 'Surgery & Dentistry',
+  },
+  {
+    id: '4',
+    name: 'Dr. Youssef Gharbi',
+    phone: '+216 71 678 901',
+    address: '3 Rue du Lac, Les Berges du Lac, Tunis',
+    latitude: 36.8360,
+    longitude: 10.2300,
+    specialty: 'Exotic Animals',
+  },
+];

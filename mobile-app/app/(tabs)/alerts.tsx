@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,134 +9,150 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-const alertsData = [
-  {
-    id: '1',
-    title: 'Low Battery',
-    message: "Rita's collar battery is below 20%.",
-    time: '5 min ago',
-    icon: 'battery-low-outline',
-    type: 'warning',
-  },
-  {
-    id: '2',
-    title: 'Safe Zone Exit',
-    message: 'Rita moved outside the safe zone.',
-    time: '12 min ago',
-    icon: 'alert-circle-outline',
-    type: 'danger',
-  },
-  {
-    id: '3',
-    title: 'Heart Rate Update',
-    message: 'Heart rate is normal and stable.',
-    time: '30 min ago',
-    icon: 'heart-outline',
-    type: 'success',
-  },
-  {
-    id: '4',
-    title: 'Location Updated',
-    message: 'New location received successfully.',
-    time: '1 hour ago',
-    icon: 'location-outline',
-    type: 'info',
-  },
+type Alert = {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  icon: string;
+  type: 'warning' | 'danger' | 'success' | 'info';
+  read: boolean;
+  group: 'Today' | 'Yesterday' | 'Earlier';
+};
+
+const INITIAL_ALERTS: Alert[] = [
+  { id: '1', title: 'Low Battery', message: "Rita's collar battery is below 20%. Please charge soon.", time: '5 min ago', icon: 'battery-low-outline', type: 'warning', read: false, group: 'Today' },
+  { id: '2', title: 'Safe Zone Exit', message: 'Rita moved outside the defined safe zone near home.', time: '12 min ago', icon: 'alert-circle-outline', type: 'danger', read: false, group: 'Today' },
+  { id: '3', title: 'Appointment Reminder', message: 'Dr. Sarah Johnson tomorrow at 10:00 AM.', time: '1 hour ago', icon: 'calendar-outline', type: 'info', read: false, group: 'Today' },
+  { id: '4', title: 'Heart Rate Normal', message: "Rita's heart rate is stable at 85 bpm.", time: '3 hours ago', icon: 'heart-outline', type: 'success', read: true, group: 'Today' },
+  { id: '5', title: 'Location Updated', message: 'New GPS location received successfully.', time: 'Yesterday 06:00 PM', icon: 'location-outline', type: 'info', read: true, group: 'Yesterday' },
+  { id: '6', title: 'Vet Visit Complete', message: 'Annual check-up with Dr. Amira Bannour completed.', time: 'Yesterday 04:30 PM', icon: 'medical-outline', type: 'success', read: true, group: 'Yesterday' },
+  { id: '7', title: 'High Temperature', message: "Rita's temperature reached 39.8°C. Monitor closely.", time: 'Mar 29 02:00 PM', icon: 'thermometer-outline', type: 'danger', read: true, group: 'Earlier' },
 ];
 
-export default function AlertsScreen() {
-  const getCardStyle = (type: string) => {
-    switch (type) {
-      case 'warning':
-        return styles.warningCard;
-      case 'danger':
-        return styles.dangerCard;
-      case 'success':
-        return styles.successCard;
-      default:
-        return styles.infoCard;
-    }
-  };
+const FILTERS = ['All', 'Urgent', 'Health', 'Location'] as const;
+type Filter = typeof FILTERS[number];
 
-  const getIconColor = (type: string) => {
-    switch (type) {
-      case 'warning':
-        return '#F09A3E';
-      case 'danger':
-        return '#E35D5D';
-      case 'success':
-        return '#67B56E';
-      default:
-        return '#5B8DEF';
-    }
-  };
+const typeColors: Record<string, string> = {
+  warning: '#F09A3E', danger: '#E35D5D', success: '#67B56E', info: '#5B8DEF',
+};
+const typeBg: Record<string, string> = {
+  warning: 'rgba(255,245,236,0.97)', danger: 'rgba(255,240,240,0.97)',
+  success: 'rgba(241,250,241,0.97)', info: 'rgba(238,244,255,0.97)',
+};
+
+export default function AlertsScreen() {
+  const [alerts, setAlerts] = useState<Alert[]>(INITIAL_ALERTS);
+  const [activeFilter, setActiveFilter] = useState<Filter>('All');
+
+  const unreadCount = alerts.filter(a => !a.read).length;
+
+  const filtered = alerts.filter(a => {
+    if (activeFilter === 'Urgent') return a.type === 'danger' || a.type === 'warning';
+    if (activeFilter === 'Health') return ['heart-outline', 'thermometer-outline', 'medical-outline'].includes(a.icon);
+    if (activeFilter === 'Location') return ['location-outline', 'alert-circle-outline'].includes(a.icon);
+    return true;
+  });
+
+  const markAllRead = () => setAlerts(prev => prev.map(a => ({ ...a, read: true })));
+  const markRead = (id: string) => setAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
+  const dismiss = (id: string) => setAlerts(prev => prev.filter(a => a.id !== id));
+
+  const groups: Alert['group'][] = ['Today', 'Yesterday', 'Earlier'];
 
   return (
-    <ImageBackground
-      source={require('@/assets/images/sky.jpg')}
-      style={styles.container}
-      resizeMode="cover"
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+    <ImageBackground source={require('@/assets/images/sky.jpg')} style={styles.container} resizeMode="cover">
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.overlay}>
+
+          {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>Alerts</Text>
-            <TouchableOpacity style={styles.filterButton}>
-              <Ionicons name="options-outline" size={22} color="#4B6A8C" />
-            </TouchableOpacity>
+            <View>
+              <Text style={styles.title}>Alerts</Text>
+              {unreadCount > 0 && (
+                <Text style={styles.subtitle}>{unreadCount} unread notification{unreadCount > 1 ? 's' : ''}</Text>
+              )}
+            </View>
+            {unreadCount > 0 && (
+              <TouchableOpacity style={styles.markAllBtn} onPress={markAllRead}>
+                <Text style={styles.markAllText}>Mark all read</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
+          {/* Summary */}
           <View style={styles.summaryRow}>
-            <View style={[styles.summaryCard, styles.summaryDanger]}>
+            <View style={[styles.summaryCard, { backgroundColor: 'rgba(255,240,240,0.97)' }]}>
               <MaterialCommunityIcons name="alert" size={24} color="#E35D5D" />
-              <Text style={styles.summaryNumber}>2</Text>
+              <Text style={styles.summaryNumber}>{alerts.filter(a => a.type === 'danger').length}</Text>
               <Text style={styles.summaryLabel}>Urgent</Text>
             </View>
-
-            <View style={[styles.summaryCard, styles.summaryInfo]}>
-              <Ionicons name="notifications-outline" size={24} color="#5B8DEF" />
-              <Text style={styles.summaryNumber}>4</Text>
-              <Text style={styles.summaryLabel}>Today</Text>
+            <View style={[styles.summaryCard, { backgroundColor: 'rgba(255,245,236,0.97)' }]}>
+              <Ionicons name="warning" size={24} color="#F09A3E" />
+              <Text style={styles.summaryNumber}>{alerts.filter(a => a.type === 'warning').length}</Text>
+              <Text style={styles.summaryLabel}>Warnings</Text>
+            </View>
+            <View style={[styles.summaryCard, { backgroundColor: 'rgba(241,250,241,0.97)' }]}>
+              <Ionicons name="checkmark-circle" size={24} color="#67B56E" />
+              <Text style={styles.summaryNumber}>{alerts.filter(a => a.type === 'success').length}</Text>
+              <Text style={styles.summaryLabel}>Resolved</Text>
             </View>
           </View>
 
-          <Text style={styles.sectionTitle}>Recent Alerts</Text>
+          {/* Filters */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersRow}>
+            {FILTERS.map(f => (
+              <TouchableOpacity
+                key={f}
+                style={[styles.filterChip, activeFilter === f && styles.filterChipActive]}
+                onPress={() => setActiveFilter(f)}
+              >
+                <Text style={[styles.filterChipText, activeFilter === f && styles.filterChipTextActive]}>{f}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
-          {alertsData.map((alert) => (
-            <TouchableOpacity
-              key={alert.id}
-              activeOpacity={0.85}
-              style={[styles.alertCard, getCardStyle(alert.type)]}
-            >
-              <View style={styles.alertLeft}>
-                <View style={styles.iconWrapper}>
-                  <Ionicons
-                    name={alert.icon as any}
-                    size={24}
-                    color={getIconColor(alert.type)}
-                  />
-                </View>
-
-                <View style={styles.textContent}>
-                  <Text style={styles.alertTitle}>{alert.title}</Text>
-                  <Text style={styles.alertMessage}>{alert.message}</Text>
-                  <Text style={styles.alertTime}>{alert.time}</Text>
-                </View>
+          {/* Grouped alerts */}
+          {groups.map(group => {
+            const groupItems = filtered.filter(a => a.group === group);
+            if (!groupItems.length) return null;
+            return (
+              <View key={group}>
+                <Text style={styles.groupLabel}>{group}</Text>
+                {groupItems.map(alert => (
+                  <TouchableOpacity
+                    key={alert.id}
+                    activeOpacity={0.88}
+                    style={[styles.alertCard, { backgroundColor: typeBg[alert.type] }, !alert.read && styles.alertCardUnread]}
+                    onPress={() => markRead(alert.id)}
+                  >
+                    <View style={[styles.iconWrapper, { backgroundColor: `${typeColors[alert.type]}18` }]}>
+                      <Ionicons name={alert.icon as any} size={22} color={typeColors[alert.type]} />
+                    </View>
+                    <View style={styles.alertContent}>
+                      <View style={styles.alertTitleRow}>
+                        <Text style={styles.alertTitle}>{alert.title}</Text>
+                        {!alert.read && <View style={styles.unreadDot} />}
+                      </View>
+                      <Text style={styles.alertMessage} numberOfLines={2}>{alert.message}</Text>
+                      <Text style={styles.alertTime}>{alert.time}</Text>
+                    </View>
+                    <TouchableOpacity style={styles.dismissBtn} onPress={() => dismiss(alert.id)}>
+                      <Ionicons name="close" size={16} color="#AAB5C2" />
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                ))}
               </View>
+            );
+          })}
 
-              <Ionicons name="chevron-forward" size={20} color="#92A0B0" />
-            </TouchableOpacity>
-          ))}
+          {filtered.length === 0 && (
+            <View style={styles.emptyState}>
+              <Ionicons name="checkmark-circle-outline" size={48} color="#9AAABB" />
+              <Text style={styles.emptyText}>No alerts in this category</Text>
+            </View>
+          )}
 
-          <View style={styles.bottomCard}>
-            <Text style={styles.bottomTitle}>Notifications</Text>
-            <Text style={styles.bottomText}>
-              You will receive alerts for battery, location, health, and safe zone activity.
-            </Text>
-          </View>
         </View>
       </ScrollView>
     </ImageBackground>
@@ -144,145 +160,104 @@ export default function AlertsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
+  container: { flex: 1 },
+  scrollContent: { flexGrow: 1 },
   overlay: {
     flex: 1,
     minHeight: '100%',
-    backgroundColor: 'rgba(255,255,255,0.35)',
-    paddingTop: 55,
+    backgroundColor: 'rgba(255,255,255,0.30)',
+    paddingTop: 58,
     paddingBottom: 30,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     marginBottom: 18,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#24364B',
-  },
-  filterButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+  title: { fontSize: 28, fontWeight: '800', color: '#24364B' },
+  subtitle: { fontSize: 13, color: '#738295', fontWeight: '600', marginTop: 2 },
+  markAllBtn: {
     backgroundColor: 'rgba(255,255,255,0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 16,
   },
-  summaryRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 22,
-  },
+  markAllText: { fontSize: 12, fontWeight: '700', color: '#5B8DEF' },
+  summaryRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
   summaryCard: {
     flex: 1,
-    borderRadius: 24,
-    paddingVertical: 18,
-    paddingHorizontal: 14,
+    borderRadius: 20,
+    paddingVertical: 14,
     alignItems: 'center',
+    gap: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
-  summaryDanger: {
-    backgroundColor: 'rgba(255,240,240,0.95)',
+  summaryNumber: { fontSize: 22, fontWeight: '800', color: '#24364B' },
+  summaryLabel: { fontSize: 11, fontWeight: '700', color: '#738295' },
+  filtersRow: { gap: 8, paddingBottom: 16, paddingRight: 4 },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.88)',
   },
-  summaryInfo: {
-    backgroundColor: 'rgba(238,244,255,0.95)',
-  },
-  summaryNumber: {
-    fontSize: 24,
+  filterChipActive: { backgroundColor: '#5B8DEF' },
+  filterChipText: { fontSize: 13, fontWeight: '700', color: '#4B6A8C' },
+  filterChipTextActive: { color: '#fff' },
+  groupLabel: {
+    fontSize: 13,
     fontWeight: '800',
-    color: '#24364B',
-    marginTop: 8,
-  },
-  summaryLabel: {
-    fontSize: 14,
-    fontWeight: '700',
     color: '#738295',
+    letterSpacing: 0.5,
+    marginBottom: 8,
     marginTop: 4,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#24364B',
-    marginBottom: 12,
-  },
   alertCard: {
-    borderRadius: 24,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 20,
+    padding: 14,
+    marginBottom: 10,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
-  warningCard: {
-    backgroundColor: 'rgba(255,245,236,0.95)',
-  },
-  dangerCard: {
-    backgroundColor: 'rgba(255,240,240,0.95)',
-  },
-  successCard: {
-    backgroundColor: 'rgba(241,250,241,0.95)',
-  },
-  infoCard: {
-    backgroundColor: 'rgba(238,244,255,0.95)',
-  },
-  alertLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+  alertCardUnread: {
+    borderLeftWidth: 3,
+    borderLeftColor: '#5B8DEF',
   },
   iconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.75)',
+    width: 46,
+    height: 46,
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    flexShrink: 0,
   },
-  textContent: {
-    flex: 1,
+  alertContent: { flex: 1 },
+  alertTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 4 },
+  alertTitle: { fontSize: 15, fontWeight: '800', color: '#24364B' },
+  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#5B8DEF' },
+  alertMessage: { fontSize: 13, color: '#5C6C7C', fontWeight: '500', lineHeight: 19 },
+  alertTime: { fontSize: 11, color: '#9AAABB', fontWeight: '600', marginTop: 5 },
+  dismissBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexShrink: 0,
   },
-  alertTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#24364B',
-    marginBottom: 4,
-  },
-  alertMessage: {
-    fontSize: 13,
-    color: '#5C6C7C',
-    fontWeight: '500',
-    marginBottom: 5,
-  },
-  alertTime: {
-    fontSize: 12,
-    color: '#8B99A8',
-    fontWeight: '600',
-  },
-  bottomCard: {
-    marginTop: 10,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    padding: 18,
-  },
-  bottomTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#24364B',
-    marginBottom: 8,
-  },
-  bottomText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#5C6C7C',
-    fontWeight: '500',
-  },
+  emptyState: { alignItems: 'center', paddingVertical: 40, gap: 12 },
+  emptyText: { fontSize: 15, color: '#9AAABB', fontWeight: '600' },
 });
